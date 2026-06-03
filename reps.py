@@ -8,9 +8,10 @@ class Ingredient:
         return self._quantity
     @quantity.setter
     def quantity(self, value):
-        if float(value) <= 0:
+        value = float(value)
+        if value <= 0:
             raise ValueError("Количество должно быть положительным")
-        self._quantity = float(value)
+        self._quantity = value
     def __str__(self):
         return f"{self.name}: {self.quantity} {self.unit}"
     def __repr__(self):
@@ -19,7 +20,7 @@ class Ingredient:
         if not isinstance(other, Ingredient):
             return False
         return self.name == other.name and self.unit == other.unit
-    
+
 class Recipe:
     def __init__(self, title, ingredients=None):
         self.title = title
@@ -47,9 +48,7 @@ class Recipe:
     def __len__(self):
         return len(self.ingredients)
     def __str__(self):
-        lines = [f"Рецепт: {self.title}"]
-        for ing in self.ingredients:
-            lines.append(f"  - {ing}")
+        lines = [f"Рецепт: {self.title}"] + [f"  - {ing}" for ing in self.ingredients]
         return "\n".join(lines)
 
 class ShoppingList:
@@ -67,16 +66,13 @@ class ShoppingList:
         totals = {}
         for ing, _ in self._items:
             key = (ing.name, ing.unit)
-            if key in totals:
-                totals[key] += ing.quantity
-            else:
-                totals[key] = ing.quantity
+            totals[key] = totals.get(key, 0) + ing.quantity
         result = [Ingredient(name, qty, unit) for (name, unit), qty in totals.items()]
         result.sort(key=lambda x: x.name)
         return result
     def __add__(self, other):
         new_list = ShoppingList()
-        new_list._items = self._items.copy() + other._items.copy()
+        new_list._items = self._items + other._items
         return new_list
 
 class DietaryRecipe(Recipe):
@@ -84,7 +80,7 @@ class DietaryRecipe(Recipe):
         super().__init__(title, ingredients)
         self.diet_type = diet_type
     def scale(self, ratio):
-        scaled_recipe = super().scale(ratio)
-        return DietaryRecipe(self.title, self.diet_type, scaled_recipe.ingredients)
+        scaled = super().scale(ratio)
+        return DietaryRecipe(self.title, self.diet_type, scaled.ingredients)
     def __str__(self):
         return f"[{self.diet_type}] " + super().__str__()
